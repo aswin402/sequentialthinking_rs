@@ -135,6 +135,7 @@ Detailed documentation is available in the [docs/](file:///home/aswin/programmin
 *   [Architecture Overview](file:///home/aswin/programming/vscode/myProjects/ai_agent_tools/sequentialthinking_rs/docs/architecture.md)
 *   [Code Structure & Layout](file:///home/aswin/programming/vscode/myProjects/ai_agent_tools/sequentialthinking_rs/docs/code_structure.md)
 *   [GoT & Clear Thought In-Depth Guide](file:///home/aswin/programming/vscode/myProjects/ai_agent_tools/sequentialthinking_rs/docs/got_and_clear_thought.md)
+*   [Agent Setup Guide](file:///home/aswin/programming/vscode/myProjects/ai_agent_tools/sequentialthinking_rs/docs/install_instruction.md)
 
 ## 📄 License
 This project is licensed under the MIT License - see the LICENSE file for details.
