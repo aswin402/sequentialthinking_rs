@@ -8,6 +8,7 @@ mod types;
 mod logging;
 mod persistence;
 mod tools;
+mod graph;
 
 use server::SequentialThinkingServer;
 use types::{
@@ -67,6 +68,7 @@ async fn main() {
     tool_registry.register(Box::new(tools::analyze_graph::AnalyzeGraphTool));
     tool_registry.register(Box::new(tools::export_session::ExportSessionTool));
     tool_registry.register(Box::new(tools::summarize::SummarizeReasoningTool));
+    tool_registry.register(Box::new(tools::templates::TemplatesTool));
 
     let stdin = tokio::io::stdin();
     let mut reader = BufReader::new(stdin).lines();
@@ -108,7 +110,7 @@ async fn main() {
                     },
                     "serverInfo": {
                         "name": "sequential-thinking-server",
-                        "version": "0.5.0"
+                        "version": "0.6.0"
                     }
                 });
                 let response = JsonRpcResponse {

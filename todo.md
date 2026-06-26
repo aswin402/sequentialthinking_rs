@@ -79,13 +79,13 @@ This TODO list maps directly to [implementationplan.md](file:///home/aswin/progr
 ---
 
 ## 🧠 Milestone 5: Thought Quality Scoring & Templates (`v0.6.0`)
-- [ ] **Task 5.1**: Split graph logic into `src/graph/` (extract `mermaid.rs` from `server.rs`)
-- [ ] **Task 5.2**: Implement quality scoring algorithm in `src/graph/quality.rs`
-- [ ] **Task 5.3**: Implement contradiction and loop detection across thought history
-- [ ] **Task 5.4**: Add reasoning templates tool (`src/tools/templates.rs`)
-  - [ ] Expose `divide-and-conquer` template
-  - [ ] Expose `hypothesis-test` template
-  - [ ] Expose `devils-advocate` template
+- [x] **Task 5.1**: Split graph logic into `src/graph/` (extract `mermaid.rs` from `server.rs`)
+- [x] **Task 5.2**: Implement quality scoring algorithm in `src/graph/quality.rs`
+- [x] **Task 5.3**: Implement contradiction and loop detection across thought history
+- [x] **Task 5.4**: Add reasoning templates tool (`src/tools/templates.rs`)
+  - [x] Expose `divide-and-conquer` template
+  - [x] Expose `hypothesis-test` template
+  - [x] Expose `devils-advocate` template
 
 ---
 

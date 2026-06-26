@@ -2,6 +2,7 @@ pub mod sequentialthinking;
 pub mod analyze_graph;
 pub mod export_session;
 pub mod summarize;
+pub mod templates;
 
 use crate::server::SequentialThinkingServer;
 use std::collections::HashMap;
@@ -207,6 +208,17 @@ mod tests {
         })).unwrap();
         assert_eq!(res["totalThoughts"], 3);
         assert_eq!(res["branchesCount"], 1);
+        assert!(res["qualityScore"].is_number());
+        assert!(res["grade"].is_string());
+
+        // Test quality report
+        let res = tool.execute(&mut server, serde_json::json!({
+            "query": "quality_report",
+            "sessionId": "test-session"
+        })).unwrap();
+        assert_eq!(res["totalThoughts"], 3);
+        assert!(res["qualityScore"].is_number());
+        assert!(res["grade"].is_string());
     }
 
     #[test]
@@ -255,5 +267,23 @@ mod tests {
         assert_eq!(res["totalThoughts"], 3);
         assert_eq!(res["totalBranches"], 1);
         assert!(res["timeline"].as_str().unwrap().contains("T1 → T2"));
+    }
+
+    #[test]
+    fn test_templates_tool() {
+        let mut server = setup_server_with_data();
+        let tool = templates::TemplatesTool;
+
+        let res = tool.execute(&mut server, serde_json::json!({
+            "template": "all"
+        })).unwrap();
+        assert!(res["templates"].is_array());
+        assert_eq!(res["templates"].as_array().unwrap().len(), 3);
+
+        let res = tool.execute(&mut server, serde_json::json!({
+            "template": "hypothesis-test"
+        })).unwrap();
+        assert_eq!(res["id"], "hypothesis-test");
+        assert!(res["recommendedSteps"].is_array());
     }
 }

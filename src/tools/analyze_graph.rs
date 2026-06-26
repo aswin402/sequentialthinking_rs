@@ -21,7 +21,7 @@ impl McpTool for AnalyzeGraphTool {
             "properties": {
                 "query": {
                     "type": "string",
-                    "enum": ["low_confidence", "contradictions", "unverified_assumptions", "dead_branches", "summary_stats"],
+                    "enum": ["low_confidence", "contradictions", "unverified_assumptions", "dead_branches", "summary_stats", "quality_report"],
                     "description": "The type of analysis/query to run against the thought graph"
                 },
                 "confidenceThreshold": {
@@ -181,6 +181,8 @@ impl McpTool for AnalyzeGraphTool {
                     }
                 }
 
+                let report = crate::graph::quality::calculate_quality(&session_id, &server.thought_history);
+
                 Ok(json!({
                     "sessionId": session_id,
                     "totalThoughts": total_thoughts,
@@ -188,7 +190,13 @@ impl McpTool for AnalyzeGraphTool {
                     "branchesCount": branches_count,
                     "totalAssumptions": total_assumptions,
                     "totalVerifiedAssumptions": total_verified,
+                    "qualityScore": report.quality_score,
+                    "grade": report.grade,
                 }))
+            }
+            "quality_report" => {
+                let report = crate::graph::quality::calculate_quality(&session_id, &server.thought_history);
+                Ok(json!(report))
             }
             _ => Err(format!("Unknown query type: {}", query)),
         }

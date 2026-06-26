@@ -4,6 +4,23 @@ All notable changes to the **Sequential Thinking MCP Server (Rust)** will be doc
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+---
+
+## [0.6.0] - 2026-06-26
+
+This release implements **Milestone 5** of the implementation plan, adding a dedicated `src/graph` module containing graph visualization and thought quality algorithms (contradiction and cycle/loop detectors), and a new templates tool providing structured reasoning patterns.
+
+### Added
+- **Graph Module Separation**: Extracted `generate_mermaid` from `src/server.rs` to a new isolated module `src/graph/mermaid.rs`.
+- **Thought Quality Analysis (`src/graph/quality.rs`)**: Implemented a comprehensive thought quality evaluation engine calculating a grade, a quality score (0-100), and statistics for confidence and assumption verification.
+- **Contradiction Detection**: Added contradiction detection matching declared assumptions against refuted/falsified outcomes in the session history.
+- **Loop/Cycle Detector**: Created a DFS-based cycle detection algorithm that detects dependency loops inside the reasoning chain and extracts the loop path.
+- **Extended Graph Analysis**: Added `"quality_report"` query type and integrated quality scores/grades directly into `"summary_stats"` query type in the `analyze_graph` tool.
+- **Reasoning Templates Tool (`reasoning_templates`)**: Implemented a templates tool in `src/tools/templates.rs` returning structured guides for `"divide-and-conquer"`, `"hypothesis-test"`, and `"devils-advocate"` thinking flows.
+- **Unit and Integration Testing**: Added test coverage for contradiction detection, loop detection, and reasoning template execution.
+
+---
+
 ## [0.5.0] - 2026-06-26
 
 This release implements **Milestone 4** of the implementation plan, establishing a multi-tool architecture with a dynamic tool registry and four distinct reasoning-related MCP tools.
