@@ -51,7 +51,7 @@ pub struct ThoughtData {
     pub total_thoughts: usize,
     #[serde(rename = "nextThoughtNeeded")]
     pub next_thought_needed: bool,
-    
+
     // Original optional fields
     #[serde(rename = "isRevision")]
     pub is_revision: Option<bool>,
@@ -76,6 +76,9 @@ pub struct ThoughtData {
     pub hypothesis: Option<String>,
     #[serde(rename = "verificationMethod")]
     pub verification_method: Option<String>,
+    #[serde(rename = "leftToBeDone")]
+    pub left_to_be_done: Option<Vec<String>>,
+    pub timestamp: Option<chrono::DateTime<chrono::Utc>>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -107,4 +110,6 @@ pub struct ToolResult {
     pub thought_graph_mermaid: String,
     #[serde(rename = "confidenceHistory")]
     pub confidence_history: Vec<Option<f64>>,
+    #[serde(rename = "leftToBeDone")]
+    pub left_to_be_done: Vec<String>,
 }

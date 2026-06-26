@@ -1,17 +1,23 @@
-use std::io::{self, Write};
 use clap::Parser;
-use tokio::io::{AsyncBufReadExt, BufReader};
 use serde_json::json;
+use std::io::{self, Write};
+use tokio::io::{AsyncBufReadExt, BufReader};
 
-mod types;
 mod server;
+mod types;
 
-use types::{JsonRpcRequest, JsonRpcResponse, JsonRpcError, CallToolParams, ThoughtData, ToolCallResponse, TextContent};
 use server::SequentialThinkingServer;
+use types::{
+    CallToolParams, JsonRpcError, JsonRpcRequest, JsonRpcResponse, TextContent, ThoughtData,
+    ToolCallResponse,
+};
 
 /// Sequential Thinking MCP Server in Rust (with Graph of Thoughts & Clear Thought features)
 #[derive(Parser, Debug)]
-#[command(version, about = "Sequential Thinking MCP Server in Rust (with Graph of Thoughts & Clear Thought features)")]
+#[command(
+    version,
+    about = "Sequential Thinking MCP Server in Rust (with Graph of Thoughts & Clear Thought features)"
+)]
 struct Args {
     /// Disable thought boxes print on stderr
     #[arg(short, long, env = "DISABLE_THOUGHT_LOGGING")]
@@ -21,19 +27,19 @@ struct Args {
 #[tokio::main]
 async fn main() {
     let args = Args::parse();
-    
+
     let mut thinking_server = SequentialThinkingServer::new(args.disable_thought_logging);
-    
+
     let stdin = tokio::io::stdin();
     let mut reader = BufReader::new(stdin).lines();
-    
+
     eprintln!("Sequential Thinking MCP Server running on stdio");
-    
+
     while let Ok(Some(line)) = reader.next_line().await {
         if line.trim().is_empty() {
             continue;
         }
-        
+
         let request: JsonRpcRequest = match serde_json::from_str(&line) {
             Ok(req) => req,
             Err(e) => {
@@ -49,9 +55,9 @@ async fn main() {
                 continue;
             }
         };
-        
+
         let req_id = request.id.clone().unwrap_or(serde_json::Value::Null);
-        
+
         match request.method.as_str() {
             "initialize" => {
                 let result = json!({
@@ -61,7 +67,7 @@ async fn main() {
                     },
                     "serverInfo": {
                         "name": "sequential-thinking-server",
-                        "version": "0.3.0"
+                        "version": "0.2.0"
                     }
                 });
                 let response = JsonRpcResponse {
@@ -146,16 +152,31 @@ async fn main() {
                             "criticism": {
                                 "type": "string",
                                 "description": "Self-criticism or evaluation of previous thoughts"
+                            },
+                            "hypothesis": {
+                                "type": "string",
+                                "description": "Hypothesis to be tested in this thought step"
+                            },
+                            "verificationMethod": {
+                                "type": "string",
+                                "description": "Method to verify or test the hypothesis"
+                            },
+                            "leftToBeDone": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                },
+                                "description": "List of items/tasks left to be done or verified"
                             }
                         },
                         "required": ["thought", "nextThoughtNeeded", "thoughtNumber", "totalThoughts"]
                     }
                 });
-                
+
                 let result = json!({
                     "tools": [sequential_thinking_tool]
                 });
-                
+
                 let response = JsonRpcResponse {
                     jsonrpc: "2.0".to_string(),
                     id: req_id,
@@ -182,7 +203,7 @@ async fn main() {
                         continue;
                     }
                 };
-                
+
                 let call_params = match params {
                     Ok(p) => p,
                     Err(e) => {
@@ -200,7 +221,7 @@ async fn main() {
                         continue;
                     }
                 };
-                
+
                 if call_params.name != "sequentialthinking" {
                     let response = JsonRpcResponse {
                         jsonrpc: "2.0".to_string(),
@@ -215,8 +236,9 @@ async fn main() {
                     send_response(&response);
                     continue;
                 }
-                
-                let thought_data_res: Result<ThoughtData, serde_json::Error> = serde_json::from_value(call_params.arguments);
+
+                let thought_data_res: Result<ThoughtData, serde_json::Error> =
+                    serde_json::from_value(call_params.arguments);
                 let thought_data = match thought_data_res {
                     Ok(td) => td,
                     Err(e) => {
@@ -234,7 +256,7 @@ async fn main() {
                         continue;
                     }
                 };
-                
+
                 match thinking_server.process_thought(thought_data) {
                     Ok(res) => {
                         let formatted_json = serde_json::to_string_pretty(&res).unwrap_or_default();
