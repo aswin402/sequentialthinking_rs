@@ -27,18 +27,18 @@ This TODO list maps directly to [implementationplan.md](file:///home/aswin/progr
 ---
 
 ## 🪵 Milestone 2: Structured Logging & Observability (`v0.3.0`)
-- [ ] **Task 2.1**: Add `tracing` and `tracing-subscriber` to `Cargo.toml`
-- [ ] **Task 2.2**: Implement structured logging initialization in `src/logging.rs`
-  - [ ] Support `--log-format pretty` (human-readable stderr output)
-  - [ ] Support `--log-format json` (machine-readable structured JSON aggregation)
-- [ ] **Task 2.3**: Replace raw `eprintln!` calls with tracing macros
-  - [ ] Log server status on startup (`src/main.rs`)
-  - [ ] Log JSON-RPC routing details and parse errors (`src/main.rs`)
-  - [ ] Pipe formatted thought panels to `stderr` via tracing instead of raw print (`src/server.rs`)
-- [ ] **Task 2.4**: Introduce `--log-format` CLI command-line arg in `src/main.rs`
-- [ ] **Task 2.5**: Instrumentation & spans
-  - [ ] Decorate `process_thought()` with `#[tracing::instrument]`
-  - [ ] Add tracing spans for Mermaid generation and TUI formatting
+- [x] **Task 2.1**: Add `tracing` and `tracing-subscriber` to `Cargo.toml`
+- [x] **Task 2.2**: Implement structured logging initialization in `src/logging.rs`
+  - [x] Support `--log-format pretty` (human-readable stderr output)
+  - [x] Support `--log-format json` (machine-readable structured JSON aggregation)
+- [x] **Task 2.3**: Replace raw `eprintln!` calls with tracing macros
+  - [x] Log server status on startup (`src/main.rs`)
+  - [x] Log JSON-RPC routing details and parse errors (`src/main.rs`)
+  - [x] Pipe formatted thought panels to `stderr` via tracing instead of raw print (`src/server.rs`)
+- [x] **Task 2.4**: Introduce `--log-format` CLI command-line arg in `src/main.rs`
+- [x] **Task 2.5**: Instrumentation & spans
+  - [x] Decorate `process_thought()` with `#[tracing::instrument]`
+  - [x] Add tracing spans for Mermaid generation and TUI formatting
 
 ---
 

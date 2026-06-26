@@ -3,6 +3,7 @@ use colored::Colorize;
 use std::collections::HashMap;
 use terminal_size::{Width, terminal_size};
 use textwrap::wrap;
+use tracing::instrument;
 
 pub struct SequentialThinkingServer {
     pub thought_history: Vec<ThoughtData>,
@@ -35,6 +36,7 @@ impl SequentialThinkingServer {
     }
 
     #[allow(unused_assignments)]
+    #[instrument(skip(self, thought_data))]
     fn format_thought(&self, thought_data: &ThoughtData) -> String {
         let thought_number = thought_data.thought_number;
         let total_thoughts = thought_data.total_thoughts;
@@ -281,6 +283,7 @@ impl SequentialThinkingServer {
         lines.join("\n")
     }
 
+    #[instrument(skip(self))]
     fn generate_mermaid(&self) -> String {
         let mut mermaid = String::from("graph TD\n");
         mermaid.push_str(
@@ -350,6 +353,7 @@ impl SequentialThinkingServer {
         mermaid
     }
 
+    #[instrument(skip(self))]
     pub fn process_thought(&mut self, mut input: ThoughtData) -> Result<ToolResult, String> {
         if input.thought_number > input.total_thoughts {
             input.total_thoughts = input.thought_number;
@@ -372,7 +376,7 @@ impl SequentialThinkingServer {
 
         if !self.disable_thought_logging {
             let formatted = self.format_thought(&input);
-            eprintln!("{}", formatted);
+            tracing::info!(target: "thought_tui", "\n{}", formatted);
         }
 
         let thought_number = input.thought_number;

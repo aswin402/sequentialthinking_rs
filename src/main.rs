@@ -5,6 +5,7 @@ use tokio::io::{AsyncBufReadExt, BufReader};
 
 mod server;
 mod types;
+mod logging;
 
 use server::SequentialThinkingServer;
 use types::{
@@ -22,18 +23,24 @@ struct Args {
     /// Disable thought boxes print on stderr
     #[arg(short, long, env = "DISABLE_THOUGHT_LOGGING")]
     disable_thought_logging: bool,
+
+    /// Log format for structured logs ("pretty" or "json")
+    #[arg(long, default_value = "pretty", env = "LOG_FORMAT")]
+    log_format: String,
 }
 
 #[tokio::main]
 async fn main() {
     let args = Args::parse();
 
+    logging::setup_logging(&args.log_format);
+
     let mut thinking_server = SequentialThinkingServer::new(args.disable_thought_logging);
 
     let stdin = tokio::io::stdin();
     let mut reader = BufReader::new(stdin).lines();
 
-    eprintln!("Sequential Thinking MCP Server running on stdio");
+    tracing::info!("Sequential Thinking MCP Server running on stdio");
 
     while let Ok(Some(line)) = reader.next_line().await {
         if line.trim().is_empty() {
@@ -43,6 +50,7 @@ async fn main() {
         let request: JsonRpcRequest = match serde_json::from_str(&line) {
             Ok(req) => req,
             Err(e) => {
+                tracing::error!(error = %e, "Failed to parse JSON-RPC request");
                 let err_resp = json!({
                     "jsonrpc": "2.0",
                     "id": null,
@@ -56,6 +64,8 @@ async fn main() {
             }
         };
 
+        tracing::debug!(method = %request.method, "Parsed JSON-RPC request");
+
         let req_id = request.id.clone().unwrap_or(serde_json::Value::Null);
 
         match request.method.as_str() {
@@ -67,7 +77,7 @@ async fn main() {
                     },
                     "serverInfo": {
                         "name": "sequential-thinking-server",
-                        "version": "0.2.0"
+                        "version": "0.3.0"
                     }
                 });
                 let response = JsonRpcResponse {
@@ -189,6 +199,7 @@ async fn main() {
                 let params: Result<CallToolParams, serde_json::Error> = match request.params {
                     Some(p) => serde_json::from_value(p),
                     None => {
+                        tracing::warn!("Missing params for tools/call");
                         let response = JsonRpcResponse {
                             jsonrpc: "2.0".to_string(),
                             id: req_id,
@@ -207,6 +218,7 @@ async fn main() {
                 let call_params = match params {
                     Ok(p) => p,
                     Err(e) => {
+                        tracing::warn!(error = %e, "Invalid params for tools/call");
                         let response = JsonRpcResponse {
                             jsonrpc: "2.0".to_string(),
                             id: req_id,
@@ -223,6 +235,7 @@ async fn main() {
                 };
 
                 if call_params.name != "sequentialthinking" {
+                    tracing::warn!(tool = %call_params.name, "Tool not found");
                     let response = JsonRpcResponse {
                         jsonrpc: "2.0".to_string(),
                         id: req_id,
@@ -242,6 +255,7 @@ async fn main() {
                 let thought_data = match thought_data_res {
                     Ok(td) => td,
                     Err(e) => {
+                        tracing::warn!(error = %e, "Invalid tool arguments");
                         let response = JsonRpcResponse {
                             jsonrpc: "2.0".to_string(),
                             id: req_id,
@@ -259,6 +273,11 @@ async fn main() {
 
                 match thinking_server.process_thought(thought_data) {
                     Ok(res) => {
+                        tracing::info!(
+                            thought_number = res.thought_number,
+                            total_thoughts = res.total_thoughts,
+                            "Processed thought successfully"
+                        );
                         let formatted_json = serde_json::to_string_pretty(&res).unwrap_or_default();
                         let text_content = TextContent {
                             content_type: "text".to_string(),
@@ -277,6 +296,7 @@ async fn main() {
                         send_response(&response);
                     }
                     Err(e) => {
+                        tracing::error!(error = %e, "Error processing thought");
                         let tool_response = ToolCallResponse {
                             content: vec![TextContent {
                                 content_type: "text".to_string(),

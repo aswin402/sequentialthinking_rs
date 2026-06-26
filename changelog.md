@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
+## [0.3.0] - 2026-06-26
+
+This release implements **Milestone 2** of the implementation plan, replacing raw stderr outputs with structured, level-filtered tracing logs and instrumentation spans.
+
+### Added
+- **Structured Logging Framework**: Added `tracing` and `tracing-subscriber` to manage server logs.
+- **Log Format Customization**: Added `--log-format` command line argument, allowing switching logging format between human-readable colored output (`pretty`) and aggregatable JSON format (`json`).
+- **Observability Configuration**: Added `src/logging.rs` configuring global logging targets to safely route all logs to standard error (`stderr`), keeping standard output (`stdout`) clean for JSON-RPC communication.
+- **Thought Box Logging**: Formatted TUI thought boxes are now piped through standard `tracing::info!` under the target `thought_tui` instead of raw `eprintln!`.
+- **System Instrumentation**: Decorated critical reasoning and formatting functions (`process_thought`, `format_thought`, `generate_mermaid`) with `#[tracing::instrument]` to support profiling and log tracking.
+- **RPC Lifecycle Logs**: Added structured debug logging for incoming JSON-RPC methods and error/warning events (such as parse errors and missing parameters).
+
+---
+
 ## [0.2.0] - 2026-06-26
 
 This release implements **Milestone 1** of the implementation plan, wiring up previously unused data structures, adding checklist/TODO tracking, introducing automatic reasoning timestamps, and enhancing visual output representations.
