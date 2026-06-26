@@ -4,6 +4,19 @@ All notable changes to the **Sequential Thinking MCP Server (Rust)** will be doc
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] - 2026-06-26
+
+This release implements **Milestone 4** of the implementation plan, establishing a multi-tool architecture with a dynamic tool registry and four distinct reasoning-related MCP tools.
+
+### Added
+- **Dynamic Tool Registry**: Introduced the `McpTool` trait and a dynamic `ToolRegistry` in `src/tools/mod.rs` allowing modular registration and routing of multiple MCP tools.
+- **Tool refactoring**: Extracted the core `sequentialthinking` logic into its own tool file `src/tools/sequentialthinking.rs`.
+- **Graph Analysis Tool (`analyze_graph`)**: Added a tool in `src/tools/analyze_graph.rs` to inspect the thought graph and filter for low-confidence nodes, contradictions, unverified assumptions, and dead branches.
+- **Session Exporting Tool (`export_session`)**: Added a tool in `src/tools/export_session.rs` to serialize and export the thinking session in multiple formats: Mermaid, JSON graph, DOT graph, and Markdown document.
+- **Reasoning Summarization Tool (`summarize_reasoning`)**: Added a tool in `src/tools/summarize.rs` providing metrics and a timeline overview of the thinking process for a session.
+- **JSON-RPC Routing Refactoring**: Refactored the core message dispatcher in `src/main.rs` to dynamically route requests based on tool registration and dynamically query available tools.
+- **Unit and Integration Testing**: Added dedicated test cases in `src/tools/mod.rs` covering registration lookup, execution, serialization, and correct behavior for all new tools.
+
 ---
 
 ## [0.4.0] - 2026-06-26

@@ -7,10 +7,11 @@ mod server;
 mod types;
 mod logging;
 mod persistence;
+mod tools;
 
 use server::SequentialThinkingServer;
 use types::{
-    CallToolParams, JsonRpcError, JsonRpcRequest, JsonRpcResponse, TextContent, ThoughtData,
+    CallToolParams, JsonRpcError, JsonRpcRequest, JsonRpcResponse, TextContent,
     ToolCallResponse,
 };
 
@@ -61,6 +62,12 @@ async fn main() {
 
     let mut thinking_server = SequentialThinkingServer::new(store, args.disable_thought_logging);
 
+    let mut tool_registry = tools::ToolRegistry::new();
+    tool_registry.register(Box::new(tools::sequentialthinking::SequentialThinkingTool));
+    tool_registry.register(Box::new(tools::analyze_graph::AnalyzeGraphTool));
+    tool_registry.register(Box::new(tools::export_session::ExportSessionTool));
+    tool_registry.register(Box::new(tools::summarize::SummarizeReasoningTool));
+
     let stdin = tokio::io::stdin();
     let mut reader = BufReader::new(stdin).lines();
 
@@ -101,7 +108,7 @@ async fn main() {
                     },
                     "serverInfo": {
                         "name": "sequential-thinking-server",
-                        "version": "0.4.0"
+                        "version": "0.5.0"
                     }
                 });
                 let response = JsonRpcResponse {
@@ -116,103 +123,8 @@ async fn main() {
                 // Client initialization confirmation, no response required
             }
             "tools/list" => {
-                let sequential_thinking_tool = json!({
-                    "name": "sequentialthinking",
-                    "description": "A detailed tool for dynamic and reflective problem-solving through thoughts. Supports branching, revisions, Graph of Thoughts (GoT) merging, and Clear Thought parameters.",
-                    "inputSchema": {
-                        "type": "object",
-                        "properties": {
-                            "thought": {
-                                "type": "string",
-                                "description": "Your current thinking step (analysis, observations, or conclusions)"
-                            },
-                            "nextThoughtNeeded": {
-                                "type": "boolean",
-                                "description": "Whether another thought step is needed"
-                            },
-                            "thoughtNumber": {
-                                "type": "integer",
-                                "description": "Current thought number in the sequence (starts at 1)"
-                            },
-                            "totalThoughts": {
-                                "type": "integer",
-                                "description": "Estimated total thoughts needed (can be adjusted dynamically)"
-                            },
-                            "isRevision": {
-                                "type": "boolean",
-                                "description": "Whether this revises previous thinking steps"
-                            },
-                            "revisesThought": {
-                                "type": "integer",
-                                "description": "Which thought number is being reconsidered/revised"
-                            },
-                            "branchFromThought": {
-                                "type": "integer",
-                                "description": "The thought number from which this alternative branch branches out"
-                            },
-                            "branchId": {
-                                "type": "string",
-                                "description": "Identifier for the current branch"
-                            },
-                            "needsMoreThoughts": {
-                                "type": "boolean",
-                                "description": "Explicit request to add more thoughts to the estimate"
-                            },
-                            "parentThoughts": {
-                                "type": "array",
-                                "items": {
-                                    "type": "integer"
-                                },
-                                "description": "Array of multiple parent thought numbers to merge branches (Graph of Thoughts)"
-                            },
-                            "assumptions": {
-                                "type": "array",
-                                "items": {
-                                    "type": "string"
-                                },
-                                "description": "List of assumptions made in this thought step"
-                            },
-                            "verifiedAssumptions": {
-                                "type": "array",
-                                "items": {
-                                    "type": "string"
-                                },
-                                "description": "Assumptions verified or refuted in this step"
-                            },
-                            "confidenceScore": {
-                                "type": "number",
-                                "description": "Confidence level in this line of reasoning (0.0 to 1.0)"
-                            },
-                            "criticism": {
-                                "type": "string",
-                                "description": "Self-criticism or evaluation of previous thoughts"
-                            },
-                            "hypothesis": {
-                                "type": "string",
-                                "description": "Hypothesis to be tested in this thought step"
-                            },
-                            "verificationMethod": {
-                                "type": "string",
-                                "description": "Method to verify or test the hypothesis"
-                            },
-                            "leftToBeDone": {
-                                "type": "array",
-                                "items": {
-                                    "type": "string"
-                                },
-                                "description": "List of items/tasks left to be done or verified"
-                            },
-                            "sessionId": {
-                                "type": "string",
-                                "description": "Unique identifier for the current thinking session"
-                            }
-                        },
-                        "required": ["thought", "nextThoughtNeeded", "thoughtNumber", "totalThoughts"]
-                    }
-                });
-
                 let result = json!({
-                    "tools": [sequential_thinking_tool]
+                    "tools": tool_registry.list()
                 });
 
                 let response = JsonRpcResponse {
@@ -262,35 +174,17 @@ async fn main() {
                     }
                 };
 
-                if call_params.name != "sequentialthinking" {
-                    tracing::warn!(tool = %call_params.name, "Tool not found");
-                    let response = JsonRpcResponse {
-                        jsonrpc: "2.0".to_string(),
-                        id: req_id,
-                        result: None,
-                        error: Some(JsonRpcError {
-                            code: -32601,
-                            message: format!("Tool not found: {}", call_params.name),
-                            data: None,
-                        }),
-                    };
-                    send_response(&response);
-                    continue;
-                }
-
-                let thought_data_res: Result<ThoughtData, serde_json::Error> =
-                    serde_json::from_value(call_params.arguments);
-                let thought_data = match thought_data_res {
-                    Ok(td) => td,
-                    Err(e) => {
-                        tracing::warn!(error = %e, "Invalid tool arguments");
+                let tool = match tool_registry.get(&call_params.name) {
+                    Some(t) => t,
+                    None => {
+                        tracing::warn!(tool = %call_params.name, "Tool not found");
                         let response = JsonRpcResponse {
                             jsonrpc: "2.0".to_string(),
                             id: req_id,
                             result: None,
                             error: Some(JsonRpcError {
-                                code: -32602,
-                                message: format!("Invalid tool arguments: {}", e),
+                                code: -32601,
+                                message: format!("Tool not found: {}", call_params.name),
                                 data: None,
                             }),
                         };
@@ -299,12 +193,11 @@ async fn main() {
                     }
                 };
 
-                match thinking_server.process_thought(thought_data) {
+                match tool.execute(&mut thinking_server, call_params.arguments) {
                     Ok(res) => {
                         tracing::info!(
-                            thought_number = res.thought_number,
-                            total_thoughts = res.total_thoughts,
-                            "Processed thought successfully"
+                            tool = %tool.name(),
+                            "Processed tool call successfully"
                         );
                         let formatted_json = serde_json::to_string_pretty(&res).unwrap_or_default();
                         let text_content = TextContent {
@@ -324,11 +217,11 @@ async fn main() {
                         send_response(&response);
                     }
                     Err(e) => {
-                        tracing::error!(error = %e, "Error processing thought");
+                        tracing::error!(tool = %tool.name(), error = %e, "Error executing tool");
                         let tool_response = ToolCallResponse {
                             content: vec![TextContent {
                                 content_type: "text".to_string(),
-                                text: format!("Error processing thought: {}", e),
+                                text: format!("Error executing tool: {}", e),
                             }],
                             is_error: Some(true),
                         };

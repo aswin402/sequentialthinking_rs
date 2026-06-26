@@ -60,21 +60,21 @@ This TODO list maps directly to [implementationplan.md](file:///home/aswin/progr
 ---
 
 ## 🛠️ Milestone 4: Multi-Tool Architecture (`v0.5.0`)
-- [ ] **Task 4.1**: Define the `McpTool` trait and a dynamic `ToolRegistry` in `src/tools/mod.rs`
-- [ ] **Task 4.2**: Refactor `sequentialthinking` into its own file `src/tools/sequentialthinking.rs`
-- [ ] **Task 4.3**: Implement `analyze_graph` tool (`src/tools/analyze_graph.rs`)
-  - [ ] `low_confidence` query filter
-  - [ ] `contradictions` query filter
-  - [ ] `unverified_assumptions` listing
-  - [ ] `dead_branches` branch path isolation
-- [ ] **Task 4.4**: Implement `export_session` tool (`src/tools/export_session.rs`)
-  - [ ] Support format: `mermaid`
-  - [ ] Support format: `json`
-  - [ ] Support format: `markdown`
-  - [ ] Support format: `dot`
-- [ ] **Task 4.5**: Implement `summarize_reasoning` tool (`src/tools/summarize.rs`)
-- [ ] **Task 4.6**: Integrate the tool registry with JSON-RPC handlers in `src/main.rs`
-- [ ] **Task 4.7**: Write unit and integration tests for all new tools
+- [x] **Task 4.1**: Define the `McpTool` trait and a dynamic `ToolRegistry` in `src/tools/mod.rs`
+- [x] **Task 4.2**: Refactor `sequentialthinking` into its own file `src/tools/sequentialthinking.rs`
+- [x] **Task 4.3**: Implement `analyze_graph` tool (`src/tools/analyze_graph.rs`)
+  - [x] `low_confidence` query filter
+  - [x] `contradictions` query filter
+  - [x] `unverified_assumptions` listing
+  - [x] `dead_branches` branch path isolation
+- [x] **Task 4.4**: Implement `export_session` tool (`src/tools/export_session.rs`)
+  - [x] Support format: `mermaid`
+  - [x] Support format: `json`
+  - [x] Support format: `markdown`
+  - [x] Support format: `dot`
+- [x] **Task 4.5**: Implement `summarize_reasoning` tool (`src/tools/summarize.rs`)
+- [x] **Task 4.6**: Integrate the tool registry with JSON-RPC handlers in `src/main.rs`
+- [x] **Task 4.7**: Write unit and integration tests for all new tools
 
 ---
 

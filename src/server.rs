@@ -310,7 +310,7 @@ impl SequentialThinkingServer {
     }
 
     #[instrument(skip(self))]
-    fn generate_mermaid(&self) -> String {
+    pub fn generate_mermaid(&self) -> String {
         let mut mermaid = String::from("graph TD\n");
         mermaid.push_str(
             "    classDef revision fill:#fafd7c,stroke:#d4b200,stroke-width:2px,color:#000;\n",
