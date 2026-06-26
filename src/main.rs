@@ -6,6 +6,7 @@ use tokio::io::{AsyncBufReadExt, BufReader};
 mod server;
 mod types;
 mod logging;
+mod persistence;
 
 use server::SequentialThinkingServer;
 use types::{
@@ -27,6 +28,14 @@ struct Args {
     /// Log format for structured logs ("pretty" or "json")
     #[arg(long, default_value = "pretty", env = "LOG_FORMAT")]
     log_format: String,
+
+    /// Storage backend ("memory" or "sqlite")
+    #[arg(long, default_value = "memory", env = "STORAGE")]
+    storage: String,
+
+    /// Path to SQLite database file
+    #[arg(long, env = "DB_PATH")]
+    db_path: Option<String>,
 }
 
 #[tokio::main]
@@ -35,7 +44,22 @@ async fn main() {
 
     logging::setup_logging(&args.log_format);
 
-    let mut thinking_server = SequentialThinkingServer::new(args.disable_thought_logging);
+    let store: Box<dyn persistence::ThoughtStore> = match args.storage.as_str() {
+        "sqlite" => {
+            let db_path = args.db_path.clone().unwrap_or_else(|| {
+                let home = std::env::var("HOME")
+                    .or_else(|_| std::env::var("USERPROFILE"))
+                    .unwrap_or_else(|_| ".".to_string());
+                let dir = std::path::Path::new(&home).join(".sequentialthinking");
+                let _ = std::fs::create_dir_all(&dir);
+                dir.join("history.db").to_str().unwrap().to_string()
+            });
+            Box::new(persistence::sqlite::SqliteThoughtStore::new(&db_path).expect("Failed to initialize SQLite store"))
+        }
+        _ => Box::new(persistence::memory::MemoryThoughtStore::new()),
+    };
+
+    let mut thinking_server = SequentialThinkingServer::new(store, args.disable_thought_logging);
 
     let stdin = tokio::io::stdin();
     let mut reader = BufReader::new(stdin).lines();
@@ -77,7 +101,7 @@ async fn main() {
                     },
                     "serverInfo": {
                         "name": "sequential-thinking-server",
-                        "version": "0.3.0"
+                        "version": "0.4.0"
                     }
                 });
                 let response = JsonRpcResponse {
@@ -177,6 +201,10 @@ async fn main() {
                                     "type": "string"
                                 },
                                 "description": "List of items/tasks left to be done or verified"
+                            },
+                            "sessionId": {
+                                "type": "string",
+                                "description": "Unique identifier for the current thinking session"
                             }
                         },
                         "required": ["thought", "nextThoughtNeeded", "thoughtNumber", "totalThoughts"]

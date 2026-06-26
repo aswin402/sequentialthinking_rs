@@ -43,19 +43,19 @@ This TODO list maps directly to [implementationplan.md](file:///home/aswin/progr
 ---
 
 ## 💾 Milestone 3: Session Persistence (SQLite) (`v0.4.0`)
-- [ ] **Task 3.1**: Add `rusqlite` and `uuid` dependencies to `Cargo.toml`
-- [ ] **Task 3.2**: Define `ThoughtStore` trait in `src/persistence/mod.rs`
-- [ ] **Task 3.3**: Extract in-memory backend to `src/persistence/memory.rs`
-- [ ] **Task 3.4**: Implement SQLite backend in `src/persistence/sqlite.rs`
-  - [ ] Create `sessions` table
-  - [ ] Create `thoughts` table with foreign key reference
-  - [ ] Implement DB schema migrations/initialization on startup
-- [ ] **Task 3.5**: Implement multi-session support with `sessionId`
-  - [ ] Add `sessionId` to thought insertion requests/responses (`src/types.rs`)
-  - [ ] Generate UUID v4 for new sessions if `sessionId` is not provided
-- [ ] **Task 3.6**: Implement CLI flag `--storage` ("memory" or "sqlite") and `--db-path` in `src/main.rs`
-- [ ] **Task 3.7**: Refactor `SequentialThinkingServer` to use `Box<dyn ThoughtStore>` instead of inline `Vec`
-- [ ] **Task 3.8**: Write storage integration tests (DB init, round-trips, multi-sessions)
+- [x] **Task 3.1**: Add `rusqlite` and `uuid` dependencies to `Cargo.toml`
+- [x] **Task 3.2**: Define `ThoughtStore` trait in `src/persistence/mod.rs`
+- [x] **Task 3.3**: Extract in-memory backend to `src/persistence/memory.rs`
+- [x] **Task 3.4**: Implement SQLite backend in `src/persistence/sqlite.rs`
+  - [x] Create `sessions` table
+  - [x] Create `thoughts` table with foreign key reference
+  - [x] Implement DB schema migrations/initialization on startup
+- [x] **Task 3.5**: Implement multi-session support with `sessionId`
+  - [x] Add `sessionId` to thought insertion requests/responses (`src/types.rs`)
+  - [x] Generate UUID v4 for new sessions if `sessionId` is not provided
+- [x] **Task 3.6**: Implement CLI flag `--storage` ("memory" or "sqlite") and `--db-path` in `src/main.rs`
+- [x] **Task 3.7**: Refactor `SequentialThinkingServer` to use `Box<dyn ThoughtStore>` instead of inline `Vec`
+- [x] **Task 3.8**: Write storage integration tests (DB init, round-trips, multi-sessions)
 
 ---
 

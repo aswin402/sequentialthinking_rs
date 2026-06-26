@@ -6,6 +6,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
+## [0.4.0] - 2026-06-26
+
+This release implements **Milestone 3** of the implementation plan, adding persistent storage backends (in-memory and SQLite) and multi-session capability with UUID session mapping.
+
+### Added
+- **ThoughtStore Trait**: Designed a decoupled `ThoughtStore` trait in `src/persistence/mod.rs` allowing interchangeable persistence layers.
+- **In-Memory Storage**: Extracted memory-backed persistence to `src/persistence/memory.rs` storing thoughts inside memory hash structures.
+- **SQLite Database Persistence**: Added a fully featured SQLite-backed storage in `src/persistence/sqlite.rs` using `rusqlite`.
+- **Database Schema**: Setup schemas with dynamic creation of `sessions` and `thoughts` tables (with foreign keys and cascading deletes) and index optimizations (`idx_thoughts_session`).
+- **Multi-session Support (`sessionId`)**: Added `sessionId` parameter to input and output JSON-RPC structures, enabling client agents to request and switch between separate thinking sessions. Auto-generates a UUID v4 session identifier if none is provided.
+- **Storage Configuration CLI Flags**: Added `--storage` flag (options: `memory`, `sqlite`) and optional `--db-path` flag to configure the SQLite database file path (defaulting to `~/.sequentialthinking/history.db`).
+- **Integration Testing**: Created a `test_sqlite_persistence` integration test verifying connection setup, table migration, and correct thought persistence/reload cycles.
+
+---
+
 ## [0.3.0] - 2026-06-26
 
 This release implements **Milestone 2** of the implementation plan, replacing raw stderr outputs with structured, level-filtered tracing logs and instrumentation spans.

@@ -1,6 +1,6 @@
 [package]
 name = "mcp-server-sequential-thinking"
-version = "0.3.0"
+version = "0.4.0"
 edition = "2024"
 
 [dependencies]
@@ -14,3 +14,5 @@ textwrap = { version = "0.16", features = ["terminal_size"] }
 chrono = { version = "0.4", features = ["serde"] }
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+rusqlite = { version = "0.32", features = ["bundled"] }
+uuid = { version = "1.0", features = ["v4", "serde"] }

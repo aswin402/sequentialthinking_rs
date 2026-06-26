@@ -79,6 +79,8 @@ pub struct ThoughtData {
     #[serde(rename = "leftToBeDone")]
     pub left_to_be_done: Option<Vec<String>>,
     pub timestamp: Option<chrono::DateTime<chrono::Utc>>,
+    #[serde(rename = "sessionId")]
+    pub session_id: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -112,4 +114,6 @@ pub struct ToolResult {
     pub confidence_history: Vec<Option<f64>>,
     #[serde(rename = "leftToBeDone")]
     pub left_to_be_done: Vec<String>,
+    #[serde(rename = "sessionId")]
+    pub session_id: String,
 }

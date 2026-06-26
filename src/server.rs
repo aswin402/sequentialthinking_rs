@@ -5,19 +5,45 @@ use terminal_size::{Width, terminal_size};
 use textwrap::wrap;
 use tracing::instrument;
 
+use crate::persistence::ThoughtStore;
+
 pub struct SequentialThinkingServer {
+    pub store: Box<dyn ThoughtStore>,
+    pub current_session_id: String,
     pub thought_history: Vec<ThoughtData>,
     pub branches: HashMap<String, Vec<ThoughtData>>,
     pub disable_thought_logging: bool,
 }
 
 impl SequentialThinkingServer {
-    pub fn new(disable_thought_logging: bool) -> Self {
+    pub fn new(store: Box<dyn ThoughtStore>, disable_thought_logging: bool) -> Self {
         Self {
+            store,
+            current_session_id: String::new(),
             thought_history: Vec::new(),
             branches: HashMap::new(),
             disable_thought_logging,
         }
+    }
+
+    pub fn load_session(&mut self, session_id: &str) -> Result<(), String> {
+        if self.current_session_id != session_id {
+            let thoughts = self.store.load_session(session_id)?;
+            self.current_session_id = session_id.to_string();
+            self.thought_history = thoughts;
+
+            // Rebuild branches cache
+            self.branches.clear();
+            for t in &self.thought_history {
+                if let (Some(_), Some(branch_id)) = (t.branch_from_thought, t.branch_id.as_ref()) {
+                    self.branches
+                        .entry(branch_id.clone())
+                        .or_insert_with(Vec::new)
+                        .push(t.clone());
+                }
+            }
+        }
+        Ok(())
     }
 
     fn get_terminal_width(&self) -> usize {
@@ -355,6 +381,19 @@ impl SequentialThinkingServer {
 
     #[instrument(skip(self))]
     pub fn process_thought(&mut self, mut input: ThoughtData) -> Result<ToolResult, String> {
+        // Resolve or generate sessionId
+        let session_id = match input.session_id.as_ref() {
+            Some(id) => id.clone(),
+            None => {
+                let generated = uuid::Uuid::new_v4().to_string();
+                input.session_id = Some(generated.clone());
+                generated
+            }
+        };
+
+        // Ensure the correct session is loaded into memory
+        self.load_session(&session_id)?;
+
         if input.thought_number > input.total_thoughts {
             input.total_thoughts = input.thought_number;
         }
@@ -363,6 +402,9 @@ impl SequentialThinkingServer {
         if input.timestamp.is_none() {
             input.timestamp = Some(chrono::Utc::now());
         }
+
+        // Save thought to store
+        self.store.save_thought(&session_id, &input)?;
 
         // Add to branch map if branch parameters are specified
         if let (Some(_branch_from), Some(branch_id)) =
@@ -403,6 +445,7 @@ impl SequentialThinkingServer {
             thought_graph_mermaid,
             confidence_history,
             left_to_be_done,
+            session_id,
         })
     }
 }
@@ -413,7 +456,8 @@ mod tests {
 
     #[test]
     fn test_basic_thought() {
-        let mut server = SequentialThinkingServer::new(true);
+        let store = Box::new(crate::persistence::memory::MemoryThoughtStore::new());
+        let mut server = SequentialThinkingServer::new(store, true);
         let input = ThoughtData {
             thought: "First thought".to_string(),
             thought_number: 1,
@@ -433,6 +477,7 @@ mod tests {
             verification_method: None,
             left_to_be_done: None,
             timestamp: None,
+            session_id: None,
         };
 
         let result = server.process_thought(input).unwrap();
@@ -444,7 +489,8 @@ mod tests {
 
     #[test]
     fn test_auto_adjust_total_thoughts() {
-        let mut server = SequentialThinkingServer::new(true);
+        let store = Box::new(crate::persistence::memory::MemoryThoughtStore::new());
+        let mut server = SequentialThinkingServer::new(store, true);
         let input = ThoughtData {
             thought: "Future thought".to_string(),
             thought_number: 5,
@@ -464,6 +510,7 @@ mod tests {
             verification_method: None,
             left_to_be_done: None,
             timestamp: None,
+            session_id: None,
         };
 
         let result = server.process_thought(input).unwrap();
@@ -472,7 +519,8 @@ mod tests {
 
     #[test]
     fn test_branching() {
-        let mut server = SequentialThinkingServer::new(true);
+        let store = Box::new(crate::persistence::memory::MemoryThoughtStore::new());
+        let mut server = SequentialThinkingServer::new(store, true);
 
         let input1 = ThoughtData {
             thought: "Main line".to_string(),
@@ -493,6 +541,7 @@ mod tests {
             verification_method: None,
             left_to_be_done: None,
             timestamp: None,
+            session_id: None,
         };
 
         let input2 = ThoughtData {
@@ -514,6 +563,7 @@ mod tests {
             verification_method: None,
             left_to_be_done: None,
             timestamp: None,
+            session_id: None,
         };
 
         server.process_thought(input1).unwrap();
@@ -526,7 +576,8 @@ mod tests {
 
     #[test]
     fn test_mermaid_generation_with_got_parent() {
-        let mut server = SequentialThinkingServer::new(true);
+        let store = Box::new(crate::persistence::memory::MemoryThoughtStore::new());
+        let mut server = SequentialThinkingServer::new(store, true);
 
         let input1 = ThoughtData {
             thought: "Idea A".to_string(),
@@ -547,6 +598,7 @@ mod tests {
             verification_method: None,
             left_to_be_done: None,
             timestamp: None,
+            session_id: None,
         };
 
         let input2 = ThoughtData {
@@ -568,6 +620,7 @@ mod tests {
             verification_method: None,
             left_to_be_done: None,
             timestamp: None,
+            session_id: None,
         };
 
         let input3 = ThoughtData {
@@ -589,6 +642,7 @@ mod tests {
             verification_method: None,
             left_to_be_done: None,
             timestamp: None,
+            session_id: None,
         };
 
         server.process_thought(input1).unwrap();
@@ -601,7 +655,8 @@ mod tests {
 
     #[test]
     fn test_new_fields() {
-        let mut server = SequentialThinkingServer::new(true);
+        let store = Box::new(crate::persistence::memory::MemoryThoughtStore::new());
+        let mut server = SequentialThinkingServer::new(store, true);
 
         let input = ThoughtData {
             thought: "Checking new fields".to_string(),
@@ -622,6 +677,7 @@ mod tests {
             verification_method: Some("VM1".to_string()),
             left_to_be_done: Some(vec!["Todo1".to_string()]),
             timestamp: None,
+            session_id: None,
         };
 
         let result = server.process_thought(input).unwrap();
@@ -631,5 +687,55 @@ mod tests {
         // Verify auto timestamp population
         let thought = &server.thought_history[0];
         assert!(thought.timestamp.is_some());
+    }
+
+    #[test]
+    fn test_sqlite_persistence() {
+        let temp_dir = std::env::temp_dir();
+        let db_path = temp_dir.join("test_seq_think.db");
+        let db_path_str = db_path.to_str().unwrap();
+
+        let _ = std::fs::remove_file(&db_path);
+
+        {
+            let store = Box::new(crate::persistence::sqlite::SqliteThoughtStore::new(db_path_str).unwrap());
+            let mut server = SequentialThinkingServer::new(store, true);
+
+            let input1 = ThoughtData {
+                thought: "SQLite thought 1".to_string(),
+                thought_number: 1,
+                total_thoughts: 2,
+                next_thought_needed: true,
+                is_revision: None,
+                revises_thought: None,
+                branch_from_thought: None,
+                branch_id: None,
+                needs_more_thoughts: None,
+                parent_thoughts: None,
+                assumptions: None,
+                verified_assumptions: None,
+                confidence_score: None,
+                criticism: None,
+                hypothesis: None,
+                verification_method: None,
+                left_to_be_done: None,
+                timestamp: None,
+                session_id: Some("session-abc".to_string()),
+            };
+
+            let res = server.process_thought(input1).unwrap();
+            assert_eq!(res.session_id, "session-abc");
+        }
+
+        {
+            let store = Box::new(crate::persistence::sqlite::SqliteThoughtStore::new(db_path_str).unwrap());
+            let mut server = SequentialThinkingServer::new(store, true);
+
+            server.load_session("session-abc").unwrap();
+            assert_eq!(server.thought_history.len(), 1);
+            assert_eq!(server.thought_history[0].thought, "SQLite thought 1");
+        }
+
+        let _ = std::fs::remove_file(&db_path);
     }
 }
