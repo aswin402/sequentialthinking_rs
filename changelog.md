@@ -4,6 +4,20 @@ All notable changes to the **Sequential Thinking MCP Server (Rust)** will be doc
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.0] - 2026-06-27
+
+This release implements **Milestone 6** of the implementation plan, establishing support for interchangeable communication transports (Stdio and HTTP/SSE), providing seamless support for remote deployment via Docker, and introducing a dedicated server health monitoring endpoint.
+
+### Added
+- **Transport Layer Abstraction**: Designed the `Transport` trait and a shared JSON-RPC message processing engine in `src/transport/mod.rs` to support multiple messaging transport mechanisms.
+- **Stdio Transport**: Extracted the terminal input/output listener into `src/transport/stdio.rs`.
+- **HTTP/SSE Transport**: Implemented standard Server-Sent Events (SSE) server in `src/transport/http.rs` using `axum`. Generates a unique `sessionId` on GET connection, streams initial endpoint data event, and receives JSON-RPC requests via POST.
+- **Health Check Endpoint**: Added a GET `/health` route returning server status for infrastructure health checks.
+- **CORS Support**: Configured tower CORS layers allowing remote clients to securely connect to the HTTP server.
+- **Docker Deployment Configuration**: Updated the `Dockerfile` to expose port 3000, initialize a database path `/data/history.db` for sqlite, and configure default environmental values.
+- **Command Line Flags**: Added `--transport` and `--port` CLI options (with env mapping) to control transport backend setup.
+- **Integration Testing**: Created full client GET -> SSE -> POST handshake loop tests.
+
 ---
 
 ## [0.6.0] - 2026-06-26

@@ -90,10 +90,10 @@ This TODO list maps directly to [implementationplan.md](file:///home/aswin/progr
 ---
 
 ## 🌐 Milestone 6: HTTP Transport & Remote Deployment (`v0.7.0` → `v1.0.0`)
-- [ ] **Task 6.1**: Add `axum`, `tower`, and `tower-http` dependencies to `Cargo.toml`
-- [ ] **Task 6.2**: Define `Transport` trait in `src/transport/mod.rs`
-- [ ] **Task 6.3**: Extract stdio transport code to `src/transport/stdio.rs`
-- [ ] **Task 6.4**: Implement HTTP/SSE transport in `src/transport/http.rs`
-- [ ] **Task 6.5**: Add `--transport` ("stdio" or "http") and `--port` CLI flags in `src/main.rs`
-- [ ] **Task 6.6**: Expose port 3000 in `Dockerfile` and setup environment defaults
-- [ ] **Task 6.7**: Implement HTTP `/health` check endpoint
+- [x] **Task 6.1**: Add `axum`, `tower`, and `tower-http` dependencies to `Cargo.toml`
+- [x] **Task 6.2**: Define `Transport` trait in `src/transport/mod.rs`
+- [x] **Task 6.3**: Extract stdio transport code to `src/transport/stdio.rs`
+- [x] **Task 6.4**: Implement HTTP/SSE transport in `src/transport/http.rs`
+- [x] **Task 6.5**: Add `--transport` ("stdio" or "http") and `--port` CLI flags in `src/main.rs`
+- [x] **Task 6.6**: Expose port 3000 in `Dockerfile` and setup environment defaults
+- [x] **Task 6.7**: Implement HTTP `/health` check endpoint
